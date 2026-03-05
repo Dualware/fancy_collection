@@ -1,0 +1,11 @@
+pubspec.lock
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+doc/api/
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store

@@ -1,0 +1,77 @@
+{
+  "location": {
+    "name": "New York",
+    "lat": 40.71,
+    "lon": -74.01,
+    "tz_id": "America/New_York",
+    "localtime_epoch": 1658522976,
+    "localtime": "2022-07-22 16:49"
+  },
+  "current": {
+    "last_updated_epoch": 1658522700,
+    "last_updated": "2022-07-22 16:45",
+    "temp_c": 34.4,
+    "condition": {
+      "text": "Partly cloudy",
+      "icon": "//cdn.weatherapi.com/weather/64x64/day/116.png",
+      "code": 1003
+    },
+    "air_quality": {
+      "co": 293.70001220703125
+    }
+  },
+  "forecast": {
+    "forecastday": [
+      {
+        "date": "2022-07-22",
+        "date_epoch": 1658448000,
+        "day": {
+          "maxtemp_c": 35.9,
+          "condition": {
+            "text": "Sunny",
+            "code": 1000
+          },
+          "uv": 8
+        },
+        "astro": {
+          "sunrise": "05:44 AM",
+          "sunset": "08:20 PM"
+        },
+        "hour": [
+          {
+            "time_epoch": 1658462400,
+            "is_day": 0,
+            "condition": {
+              "text": "Clear",
+              "code": 1000
+            },
+            "will_it_rain": 0,
+            "uv": 1
+          }
+        ]
+      }
+    ]
+  },
+  "alerts": {
+    "alert": [
+      {
+        "desc": "...HEAT ADVISORY REMAINS IN EFFECT UNTIL 8 PM EDT SUNDAY... * WHAT...Heat index values up to 105. * WHERE...Eastern Passaic Hudson Western Bergen Western Essex Eastern Bergen and Eastern Essex Counties. * WHEN...Until 8 PM EDT Sunday. * IMPACTS...High temperatures and high humidity may cause heat illnesses to occur.",
+        "instruction": ""
+      }
+    ]
+  },
+  "indexes": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "complexIndex": [
+    "a",
+    "b",
+    {
+      "name": "c",
+      "lastName": "d"
+    }
+  ]
+}
