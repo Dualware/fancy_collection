@@ -7,7 +7,9 @@ import 'package:fancy_collection/fancy_collection_mixin.dart';
 class FancyList<T> extends ListBase<T> with FancyCollectionMixin {
   final List<T> _values = [];
 
-  static FancyList initWithList(List other) {
+  FancyList();
+
+  static FancyList initWithList(List other, {Type? listType}) {
     FancyList listenableList = FancyList();
 
     for (var element in other) {
@@ -20,6 +22,20 @@ class FancyList<T> extends ListBase<T> with FancyCollectionMixin {
       }
     }
 
+    return listenableList;
+  }
+
+  factory FancyList.from(List other) {
+    FancyList<T> listenableList = FancyList<T>();
+    for (var element in other) {
+      if (element is Map) {
+        listenableList.add(FancyMap.initWithMap(element) as T);
+      } else if (element is List) {
+        listenableList.add(FancyList.initWithList(element) as T);
+      } else {
+        listenableList.add(element as T);
+      }
+    }
     return listenableList;
   }
 
