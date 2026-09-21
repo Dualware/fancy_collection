@@ -79,26 +79,6 @@ class FancyList<T> extends ListBase<T> with FancyCollectionMixin {
   }
 
   @override
-  bool remove(Object? element) {
-    FancyCollectionEvent listenableContainerEvent = FancyCollectionEvent();
-    listenableContainerEvent.type = FancyCollectionEventType.update;
-
-    listenableContainerEvent.value = element;
-
-    for (int i = 0; i < this.length; i++) {
-      if (this[i] == element) {
-        listenableContainerEvent.index = i;
-        listenableContainerEvent.attributePath =
-            "${(attributePath != null) ? "$attributePath" : ""}[${listenableContainerEvent.index}]";
-        this._closeGap(i, i + 1);
-        processEvent(listenableContainerEvent);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @override
   void removeWhere(bool Function(T element) test) {
     FancyCollectionEvent listenableContainerEvent = FancyCollectionEvent();
     listenableContainerEvent.type = FancyCollectionEventType.remove;
@@ -144,23 +124,11 @@ class FancyList<T> extends ListBase<T> with FancyCollectionMixin {
     FancyCollectionEvent listenableContainerEvent = FancyCollectionEvent();
     listenableContainerEvent.type = FancyCollectionEventType.remove;
     listenableContainerEvent.value = null;
-    listenableContainerEvent.index - 1;
+    listenableContainerEvent.index = -1;
     listenableContainerEvent.attributePath =
         "${(attributePath != null) ? "$attributePath" : ""}[*]";
 
     super.removeRange(start, end);
     processEvent(listenableContainerEvent);
-  }
-
-  void _closeGap(int start, int end) {
-    int length = this.length;
-    assert(0 <= start);
-    assert(start < end);
-    assert(end <= length);
-    int size = end - start;
-    for (int i = end; i < length; i++) {
-      this[i - size] = this[i];
-    }
-    this.length = length - size;
   }
 }
