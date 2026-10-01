@@ -3,6 +3,8 @@
 [![pub package](https://img.shields.io/pub/v/fancy_collection.svg)](https://pub.dev/packages/fancy_collection)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+Published by [Dualware Software Service Inc.](https://www.dualware.com)
+
 Observable `List` and `Map` implementations for Flutter. `FancyList` and
 `FancyMap` behave like regular collections, but notify listeners whenever an
 entry is added, updated or removed — including changes made deep inside
@@ -284,3 +286,7 @@ form widgets. It has no dependency on either and can be used on its own.
 
 Issues and pull requests are welcome at
 [github.com/Dualware/fancy_collection](https://github.com/Dualware/fancy_collection/issues).
+
+## Publisher
+
+Maintained by [Dualware Software Service Inc.](https://www.dualware.com).
