@@ -1,42 +1,62 @@
 import 'dart:collection';
 
 import 'package:fancy_collection/fancy_collection_event.dart';
-import 'package:fancy_collection/fancy_map.dart';
 import 'package:fancy_collection/fancy_collection_mixin.dart';
+import 'package:fancy_collection/fancy_map.dart';
 
+/// A [List] that notifies listeners when elements are added, replaced or
+/// removed.
+///
+/// ```dart
+/// final todos = FancyList<String>();
+/// todos.addListener('*', FancyCollectionValueChangeListener(
+///   onCollectionEvent: (e) => print('${e.type} at ${e.attributePath}'),
+/// ));
+/// todos.add('Write docs'); // FancyCollectionEventType.add at [0]
+/// ```
+///
+/// Events are emitted for [add], `[]=`, [removeAt], [removeLast],
+/// [removeWhere] and [removeRange]. Other [List] operations are implemented
+/// by [ListBase] in terms of these, so they emit the corresponding events
+/// for each element they touch.
 class FancyList<T> extends ListBase<T> with FancyCollectionMixin {
   final List<T> _values = [];
 
+  /// Creates an empty list.
   FancyList();
 
-  static FancyList initWithList(List other, {Type? listType}) {
-    FancyList listenableList = FancyList();
+  /// Creates an untyped list from [other], converting nested [Map]s and
+  /// [List]s into [FancyMap]s and [FancyList]s.
+  static FancyList initWithList(List other) {
+    FancyList fancyList = FancyList();
 
     for (var element in other) {
       if (element is Map) {
-        listenableList.add(FancyMap.initWithMap(element));
+        fancyList.add(FancyMap.initWithMap(element));
       } else if (element is List) {
-        listenableList.add(FancyList.initWithList(element));
+        fancyList.add(FancyList.initWithList(element));
       } else {
-        listenableList.add(element);
+        fancyList.add(element);
       }
     }
 
-    return listenableList;
+    return fancyList;
   }
 
+  /// Creates a list containing the elements of [other], converting nested
+  /// [Map]s and [List]s into [FancyMap]s and [FancyList]s.
   factory FancyList.from(List other) {
-    FancyList<T> listenableList = FancyList<T>();
+    FancyList<T> fancyList = FancyList<T>();
     for (var element in other) {
       if (element is Map) {
-        listenableList.add(FancyMap.initWithMap(element) as T);
+        fancyList.add(FancyMap.initWithMap(element) as T);
       } else if (element is List) {
-        listenableList.add(FancyList.initWithList(element) as T);
+        fancyList.add(FancyList.initWithList(element) as T);
       } else {
-        listenableList.add(element as T);
+        fancyList.add(element as T);
       }
     }
-    return listenableList;
+    return fancyList;
   }
 
   @override
@@ -47,17 +67,19 @@ class FancyList<T> extends ListBase<T> with FancyCollectionMixin {
     _values.length = newLength;
   }
 
+  String _pathFor(Object index) => "${attributePath ?? ""}[$index]";
+
   @override
   void add(T element) {
-    FancyCollectionEvent listenableContainerEvent = FancyCollectionEvent();
-    listenableContainerEvent.type = FancyCollectionEventType.add;
-    listenableContainerEvent.index = this.length;
-    listenableContainerEvent.value = element;
-    listenableContainerEvent.attributePath =
-        "${(attributePath != null) ? "$attributePath" : ""}[${listenableContainerEvent.index}]";
+    final event =
+        FancyCollectionEvent()
+          ..type = FancyCollectionEventType.add
+          ..index = length
+          ..value = element;
+    event.attributePath = _pathFor(event.index!);
 
     _values.add(element);
-    processEvent(listenableContainerEvent);
+    processEvent(event);
   }
 
   @override
@@ -67,68 +89,66 @@ class FancyList<T> extends ListBase<T> with FancyCollectionMixin {
 
   @override
   void operator []=(int index, T value) {
-    FancyCollectionEvent listenableContainerEvent = FancyCollectionEvent();
-    listenableContainerEvent.type = FancyCollectionEventType.update;
-    listenableContainerEvent.index = index;
-    listenableContainerEvent.value = value;
-    listenableContainerEvent.attributePath =
-        "${(attributePath != null) ? "$attributePath" : ""}[${listenableContainerEvent.index}]";
+    final event =
+        FancyCollectionEvent()
+          ..type = FancyCollectionEventType.update
+          ..index = index
+          ..value = value
+          ..attributePath = _pathFor(index);
 
     _values[index] = value;
-    processEvent(listenableContainerEvent);
+    processEvent(event);
   }
 
   @override
   void removeWhere(bool Function(T element) test) {
-    FancyCollectionEvent listenableContainerEvent = FancyCollectionEvent();
-    listenableContainerEvent.type = FancyCollectionEventType.remove;
-    listenableContainerEvent.value = null;
-    listenableContainerEvent.index = -1;
-    listenableContainerEvent.attributePath =
-        "${(attributePath != null) ? "$attributePath" : ""}[*]";
+    final event =
+        FancyCollectionEvent()
+          ..type = FancyCollectionEventType.remove
+          ..index = -1
+          ..attributePath = _pathFor('*');
 
     super.removeWhere(test);
-    processEvent(listenableContainerEvent);
+    processEvent(event);
   }
 
   @override
   T removeAt(int index) {
-    FancyCollectionEvent listenableContainerEvent = FancyCollectionEvent();
-    listenableContainerEvent.type = FancyCollectionEventType.remove;
-    listenableContainerEvent.value = this[index];
-    listenableContainerEvent.index = index;
-    listenableContainerEvent.attributePath =
-        "${(attributePath != null) ? "$attributePath" : ""}[${listenableContainerEvent.index}]";
+    final event =
+        FancyCollectionEvent()
+          ..type = FancyCollectionEventType.remove
+          ..value = this[index]
+          ..index = index
+          ..attributePath = _pathFor(index);
 
     T returnValue = super.removeAt(index);
-    processEvent(listenableContainerEvent);
+    processEvent(event);
     return returnValue;
   }
 
   @override
   T removeLast() {
-    FancyCollectionEvent listenableContainerEvent = FancyCollectionEvent();
-    listenableContainerEvent.type = FancyCollectionEventType.remove;
-    listenableContainerEvent.value = last;
-    listenableContainerEvent.index = length - 1;
-    listenableContainerEvent.attributePath =
-        "${(attributePath != null) ? "$attributePath" : ""}[${listenableContainerEvent.index}]";
+    final event =
+        FancyCollectionEvent()
+          ..type = FancyCollectionEventType.remove
+          ..value = last
+          ..index = length - 1
+          ..attributePath = _pathFor(length - 1);
 
     T returnValue = super.removeLast();
-    processEvent(listenableContainerEvent);
+    processEvent(event);
     return returnValue;
   }
 
   @override
   void removeRange(int start, int end) {
-    FancyCollectionEvent listenableContainerEvent = FancyCollectionEvent();
-    listenableContainerEvent.type = FancyCollectionEventType.remove;
-    listenableContainerEvent.value = null;
-    listenableContainerEvent.index = -1;
-    listenableContainerEvent.attributePath =
-        "${(attributePath != null) ? "$attributePath" : ""}[*]";
+    final event =
+        FancyCollectionEvent()
+          ..type = FancyCollectionEventType.remove
+          ..index = -1
+          ..attributePath = _pathFor('*');
 
     super.removeRange(start, end);
-    processEvent(listenableContainerEvent);
+    processEvent(event);
   }
 }

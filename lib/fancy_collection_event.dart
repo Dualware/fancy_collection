@@ -1,48 +1,52 @@
 import 'package:fancy_collection/fancy_list.dart';
 import 'package:fancy_collection/fancy_map.dart';
 
-/// ListenableContainerEvent object is passed to listener along with the event type,
-/// key, value and the index for the list type containers.
+/// Describes a change that happened in a [FancyList] or [FancyMap].
 ///
-/// Not all the attributes are guaranteed to have a value as ListenableContainerEvent class
-/// serves both List and Map collections.
-///
-/// ListenableContainerEvent is always triggered after the collection is maniuplated.
+/// An event is delivered to listeners after the collection has been
+/// modified. Because the same class serves both lists and maps, some fields
+/// only apply to one kind of collection and are `null` otherwise.
 class FancyCollectionEvent {
-  /// The type of the event happened in the collection.
+  /// The kind of change that happened.
   FancyCollectionEventType? type;
 
-  late String attributePath;
+  /// Path of the changed entry, relative to the root collection.
+  ///
+  /// Map keys are joined with `.` and list indexes are written in brackets,
+  /// e.g. `user.addresses[2].city`. Bulk list removals use `[*]` as the index.
+  String attributePath = '';
 
-  /// For Map collections, it includes the key
-  /// of the object where the even happened.
-  /// It is only populated for [FancyMap] collections.
-  late dynamic key;
+  /// The key of the changed entry. Only set for [FancyMap] events.
+  dynamic key;
 
-  /// It includes the value of the collection item before the event happened.
-  /// It is only populated for [FancyCollectionEventType.update] event type.
-  late dynamic oldValue;
+  /// The previous value of the entry. Only set for
+  /// [FancyCollectionEventType.update] events on a [FancyMap].
+  dynamic oldValue;
 
-  /// It includes the new value after the event happened on the collection item.
-  /// It is not populated for [FancyCollectionEventType.remove] event type.
-  late dynamic value;
+  /// The new value of the entry.
+  ///
+  /// For [FancyList] removals this is the removed element. It is `null` for
+  /// [FancyMap] removals and for bulk list removals.
+  dynamic value;
 
-  /// It includes the index of the collection item that the event happened.
-  /// This value is set to -1 when multiple indexes are removed from collection using one of the range removel functions such as removeWhere()
-  /// It is only populated for [FancyList] collections.
-  late int index;
+  /// The index of the changed element. Only set for [FancyList] events.
+  ///
+  /// It is `-1` when several elements were removed at once, for example by
+  /// [FancyList.removeWhere] or [FancyList.removeRange].
+  int? index;
 }
 
+/// The kind of change described by a [FancyCollectionEvent].
 enum FancyCollectionEventType {
-  /// Triggered when a new object added to the collection.
+  /// An entry was added to the collection.
   add,
 
-  /// Triggered when an object is removed from the collection.
+  /// An entry was removed from the collection.
   remove,
 
-  /// Triggered when an object is updated in the collection.
+  /// An existing entry was replaced with a new value.
   update,
 
-  /// Triggered for all the events happening in the collection.
+  /// Used by listeners to receive every kind of event.
   all,
 }

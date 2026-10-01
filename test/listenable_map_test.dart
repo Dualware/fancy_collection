@@ -11,7 +11,8 @@ void main() {
 
   setUp(() {
     String dir = Directory.current.path;
-    final file = File('$dir/test/test_resources/weather_data.json').readAsStringSync();
+    final file =
+        File('$dir/test/test_resources/weather_data.json').readAsStringSync();
     jsonFileContent = file;
   });
 
@@ -269,15 +270,16 @@ void main() {
 
     List attributePathsThatTheEventCalled = [];
 
-    FancyCollectionValueChangeListener listener = FancyCollectionValueChangeListener(
-      listensFor: FancyCollectionEventType.update,
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributePathsThatTheEventCalled.add(event.attributePath);
+    FancyCollectionValueChangeListener listener =
+        FancyCollectionValueChangeListener(
+          listensFor: FancyCollectionEventType.update,
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributePathsThatTheEventCalled.add(event.attributePath);
 
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
     listenableMap.addListener("*", listener);
     listenableMap["location"]["name"] = "Chicago";
@@ -299,14 +301,15 @@ void main() {
 
     List attributePathsThatTheEventCalled = [];
 
-    FancyCollectionValueChangeListener listener = FancyCollectionValueChangeListener(
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributePathsThatTheEventCalled.add(event.attributePath);
+    FancyCollectionValueChangeListener listener =
+        FancyCollectionValueChangeListener(
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributePathsThatTheEventCalled.add(event.attributePath);
 
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
     listenableMap.addListener("*", listener);
     listenableMap["location"]["name"] = "Chicago";
@@ -329,15 +332,16 @@ void main() {
 
     List attributesAdded = [];
 
-    FancyCollectionValueChangeListener addListener = FancyCollectionValueChangeListener(
-      listensFor: FancyCollectionEventType.add,
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributesAdded.add(event.attributePath);
+    FancyCollectionValueChangeListener addListener =
+        FancyCollectionValueChangeListener(
+          listensFor: FancyCollectionEventType.add,
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributesAdded.add(event.attributePath);
 
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
     listenableMap.addListener("*", addListener);
 
@@ -358,33 +362,36 @@ void main() {
     List attributesRemoved = [];
     List attributesUpdated = [];
 
-    FancyCollectionValueChangeListener addListener = FancyCollectionValueChangeListener(
-      listensFor: FancyCollectionEventType.add,
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributesAdded.add(event.attributePath);
+    FancyCollectionValueChangeListener addListener =
+        FancyCollectionValueChangeListener(
+          listensFor: FancyCollectionEventType.add,
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributesAdded.add(event.attributePath);
 
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
-    FancyCollectionValueChangeListener removeListener = FancyCollectionValueChangeListener(
-      listensFor: FancyCollectionEventType.remove,
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributesRemoved.add(event.attributePath);
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+    FancyCollectionValueChangeListener removeListener =
+        FancyCollectionValueChangeListener(
+          listensFor: FancyCollectionEventType.remove,
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributesRemoved.add(event.attributePath);
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
-    FancyCollectionValueChangeListener updateListener = FancyCollectionValueChangeListener(
-      listensFor: FancyCollectionEventType.update,
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributesUpdated.add(event.attributePath);
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+    FancyCollectionValueChangeListener updateListener =
+        FancyCollectionValueChangeListener(
+          listensFor: FancyCollectionEventType.update,
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributesUpdated.add(event.attributePath);
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
     listenableMap.addListener("*", addListener);
     listenableMap.addListener("*", removeListener);
@@ -412,15 +419,16 @@ void main() {
 
     List attributePathsThatTheEventCalled = [];
 
-    FancyCollectionValueChangeListener listener = FancyCollectionValueChangeListener(
-      listensFor: FancyCollectionEventType.update,
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributePathsThatTheEventCalled.add(event.attributePath);
+    FancyCollectionValueChangeListener listener =
+        FancyCollectionValueChangeListener(
+          listensFor: FancyCollectionEventType.update,
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributePathsThatTheEventCalled.add(event.attributePath);
 
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
     listenableMap.addListener("current.*", listener);
     listenableMap["location"]["name"] = "Chicago";
@@ -440,15 +448,16 @@ void main() {
 
     List attributePathsThatTheEventCalled = [];
 
-    FancyCollectionValueChangeListener listener = FancyCollectionValueChangeListener(
-      listensFor: FancyCollectionEventType.update,
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributePathsThatTheEventCalled.add(event.attributePath);
+    FancyCollectionValueChangeListener listener =
+        FancyCollectionValueChangeListener(
+          listensFor: FancyCollectionEventType.update,
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributePathsThatTheEventCalled.add(event.attributePath);
 
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
     listenableMap.addListener("location.name", listener);
     listenableMap["location"]["name"] = "Chicago";
@@ -464,15 +473,16 @@ void main() {
 
     List attributePathsThatTheEventCalled = [];
 
-    FancyCollectionValueChangeListener listener = FancyCollectionValueChangeListener(
-      listensFor: FancyCollectionEventType.update,
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributePathsThatTheEventCalled.add(event.attributePath);
+    FancyCollectionValueChangeListener listener =
+        FancyCollectionValueChangeListener(
+          listensFor: FancyCollectionEventType.update,
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributePathsThatTheEventCalled.add(event.attributePath);
 
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
     listenableMap.addListener("location.*", listener);
     listenableMap["location"]["name"] = "Chicago";
@@ -488,15 +498,16 @@ void main() {
 
     List attributePathsThatTheEventCalled = [];
 
-    FancyCollectionValueChangeListener listener = FancyCollectionValueChangeListener(
-      listensFor: FancyCollectionEventType.update,
-      onCollectionEvent: (FancyCollectionEvent event) async {
-        attributePathsThatTheEventCalled.add(event.attributePath);
+    FancyCollectionValueChangeListener listener =
+        FancyCollectionValueChangeListener(
+          listensFor: FancyCollectionEventType.update,
+          onCollectionEvent: (FancyCollectionEvent event) async {
+            attributePathsThatTheEventCalled.add(event.attributePath);
 
-        await Future.delayed(const Duration(milliseconds: 10));
-        return;
-      },
-    );
+            await Future.delayed(const Duration(milliseconds: 10));
+            return;
+          },
+        );
 
     listenableMap.addListener("location.*", listener);
     listenableMap["location"]["name"] = "Chicago";
