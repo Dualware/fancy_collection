@@ -77,45 +77,73 @@ ValueListenableBuilder<FancyCollectionEvent>(
 );
 ```
 
+## Which events are emitted
+
+Every mutating operation emits exactly one event per affected entry, after
+the change has been applied:
+
+| Operation                                                   | Events                                         |
+| ----------------------------------------------------------- | ---------------------------------------------- |
+| `add`, `addAll`, `insert`, `insertAll`, growing `length`    | `add` per new element, at its final index      |
+| `list[i] = v`, `setAll`, `setRange`, `fillRange`            | `update` per element                           |
+| `remove`, `removeAt`, `removeLast`                          | `remove` at the element's former index         |
+| `removeWhere`, `retainWhere`, `removeRange`, `clear`, shrinking `length` | one bulk `remove` at `[*]`, if anything was removed |
+| `sort`, `shuffle`                                           | one bulk `update` at `[*]`                     |
+| `replaceRange`                                              | bulk `remove`, then `add` per new element      |
+| `map[k] = v`, `addAll`, `putIfAbsent`, `update`, `updateAll` | `add` or `update` per entry                   |
+| `remove`, `removeWhere`, `clear` (map)                      | `remove` per entry                             |
+
 ## How path matching works
 
 Event paths join map keys with `.` and wrap list indexes in brackets, e.g.
-`orders[2].items[0].price`. A listener path is compared to an event path
-segment by segment:
+`orders[2].items[0].price`. Paths are relative to the collection the
+listener is registered on. A listener path is compared to an event path
+segment by segment until one of them ends:
 
-| Listener path | Receives events for                                          |
-| ------------- | ------------------------------------------------------------ |
-| `*`           | everything                                                   |
-| `address`     | `address` and anything below it, e.g. `address.city`         |
-| `address.city`| `address.city`, and `address` when the whole map is replaced |
-| `items[*]`    | any element of `items`                                       |
-| `items[2]`    | `items[2]`, and bulk removals from `items` (reported as `items[*]`) |
+| Listener path   | Receives events for                                                  |
+| --------------- | -------------------------------------------------------------------- |
+| `*`             | everything                                                           |
+| `address`       | `address` and anything below it, e.g. `address.city`                 |
+| `address.city`  | `address.city`, and `address` when the whole map is replaced         |
+| `items[*]`      | any element of `items`                                               |
+| `items[2]`      | `items[2]` and below, and bulk changes to `items` (`items[*]`)       |
+
+Keys are matched exactly against the key's `toString()`, so any key can be
+used — including ones with spaces, dashes or non-ASCII characters. Escape
+`.`, `[`, `]` and `\` inside a key, or a key that is exactly `*`, with a
+backslash: `r'file\.txt'`, `r'\*'`. Event paths use the same escaping, so
+`event.attributePath` can be passed straight back to `addListener`.
+`items.1` (map key `"1"`) and `items[1]` (list index 1) are different paths.
+A malformed path throws an `ArgumentError` when the listener is added.
+
+## Nested collections
+
+`Map` and `List` values stored in a `FancyMap` or `FancyList` become nested
+observable collections and report their changes to the parent:
+
+- A plain `Map` / `List` is converted (copied) into a `FancyMap` /
+  `FancyList` when that fits the declared element type — e.g. `dynamic`,
+  `Object?`, `Map<String, dynamic>` or `List<dynamic>`. Other values, such
+  as a `List<int>` stored in a `FancyMap<String, List<int>>`, are stored
+  unchanged and are not observed.
+- A `FancyMap` / `FancyList` that is not part of another collection is
+  stored as-is (not copied), so listeners already registered on it keep
+  working. One that already belongs to another collection is copied,
+  keeping its type arguments.
+- A collection removed from its parent, or replaced by another value, stops
+  reporting to that parent.
+- A collection cannot contain itself; that throws an `ArgumentError`.
 
 ## Event fields
 
-| Field           | List events                                      | Map events                     |
-| --------------- | ------------------------------------------------ | ------------------------------ |
-| `type`          | `add`, `update`, `remove`                        | `add`, `update`, `remove`      |
-| `attributePath` | e.g. `[3]`, or `[*]` for bulk removals           | e.g. `address.city`            |
-| `index`         | element index, `-1` for bulk removals            | `null`                         |
-| `key`           | `null`                                           | entry key                      |
-| `value`         | new element, or the removed element on `remove`  | new value, `null` on `remove`  |
-| `oldValue`      | `null`                                           | previous value on `update`     |
-
-## Limitations
-
-- Nested maps and lists are stored as `FancyMap<dynamic, dynamic>` /
-  `FancyList<dynamic>`. When a `FancyMap` holds maps or lists, declare its
-  value type as `dynamic` or `Object?`; a narrower type such as
-  `FancyMap<String, Map<String, dynamic>>` throws a `TypeError` on
-  assignment.
-- `clear()` does not emit events.
-- Operations inherited from `ListBase` that shift elements (`insert`,
-  `removeAt`, `removeWhere`, `sort`, ...) emit an `update` event for every
-  element they move, in addition to the `add` / `remove` event.
-- Maps and lists added to a `FancyList` with `add` are stored as-is.
-  `FancyList.from` converts them, but changes inside elements of a
-  `FancyList` are not propagated to the list's listeners.
+| Field           | List events                                        | Map events                          |
+| --------------- | -------------------------------------------------- | ----------------------------------- |
+| `type`          | `add`, `update`, `remove`                          | `add`, `update`, `remove`           |
+| `attributePath` | e.g. `[3]`, or `[*]` for bulk changes              | e.g. `address.city`                 |
+| `index`         | element index, `-1` for bulk changes               | `null`                              |
+| `key`           | `null`                                             | entry key                           |
+| `value`         | stored element; the removed element on `remove`    | stored value; `null` on `remove`    |
+| `oldValue`      | previous element on `update`; removed element on `remove` | previous value on `update` and `remove` |
 
 ## Related packages
 
