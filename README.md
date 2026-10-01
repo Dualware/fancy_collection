@@ -1,24 +1,56 @@
 # fancy_collection
 
+[![pub package](https://img.shields.io/pub/v/fancy_collection.svg)](https://pub.dev/packages/fancy_collection)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Observable `List` and `Map` implementations for Flutter. `FancyList` and
 `FancyMap` behave like regular collections, but notify listeners whenever an
 entry is added, updated or removed — including changes made deep inside
 nested maps and lists.
 
+## Why fancy_collection?
+
+Rebuilding a widget when *some* data inside a list or map changes usually
+means one of:
+
+- wrapping the whole thing in a `ChangeNotifier` and calling `notifyListeners()`
+  by hand after every mutation (easy to forget one), or
+- rebuilding the entire widget whenever *anything* in the structure
+  changes, even a field three levels deep that this particular widget
+  doesn't care about.
+
+`fancy_collection` lets you subscribe to a specific path — `cart.items[2].price`,
+`user.address.city` — and only hear about changes to that path, while still
+using plain `List`/`Map` APIs (`add`, `[]=`, `remove`, `for`-loops, ...) to
+read and write the data. No manual `notifyListeners()` calls, no rebuilding
+more than you need to.
+
+## Contents
+
+- [Features](#features)
+- [Getting started](#getting-started)
+- [Usage](#usage)
+- [Which events are emitted](#which-events-are-emitted)
+- [How path matching works](#how-path-matching-works)
+- [Nested collections](#nested-collections)
+- [Event fields](#event-fields)
+- [Listener lifecycle](#listener-lifecycle)
+- [FAQ](#faq)
+- [Related packages](#related-packages)
+
 ## Features
 
 - Drop-in `List` / `Map` replacements (`FancyList<T>` extends `ListBase<T>`,
-  `FancyMap<K, V>` extends `MapBase<K, V>`).
+  `FancyMap<K, V>` extends `MapBase<K, V>`) — use them anywhere you'd use a
+  `List` or `Map`.
 - Listen to the whole collection or to a specific path such as
   `user.addresses[0].city`, with `*` wildcards.
 - Filter listeners by event type: `add`, `update`, `remove` or `all`.
 - Nested `Map`s and `List`s are converted automatically and bubble their
-  events up to the root.
+  events up to the root, so one listener on the root hears about changes
+  anywhere underneath it.
 - `getValueNotifier` exposes any path as a `ValueNotifier` for use with
-  `ValueListenableBuilder`.
-
-Listeners are held strongly with no automatic cleanup — see
-[Listener lifecycle](#listener-lifecycle) below.
+  `ValueListenableBuilder`, with no extra wiring.
 
 ## Getting started
 
@@ -29,6 +61,9 @@ flutter pub add fancy_collection
 ```dart
 import 'package:fancy_collection/fancy_collection.dart';
 ```
+
+This package depends on Flutter (for `ValueNotifier`) — it doesn't work in
+a plain Dart (non-Flutter) project.
 
 ## Usage
 
@@ -73,12 +108,19 @@ user.addListener(
 
 ### Rebuilding widgets
 
+No `StatefulWidget`, no manual `setState` — read the collection straight
+from the builder:
+
 ```dart
 ValueListenableBuilder<FancyCollectionEvent>(
   valueListenable: todos.getValueNotifier('*'),
   builder: (context, event, _) => Text('${todos.length} todos'),
 );
 ```
+
+Narrow the path to avoid rebuilding on unrelated changes, e.g.
+`cart.getValueNotifier('items[*].price')` rebuilds only when an item's
+price changes, not when its name does.
 
 ## Which events are emitted
 
@@ -117,7 +159,8 @@ used — including ones with spaces, dashes or non-ASCII characters. Escape
 backslash: `r'file\.txt'`, `r'\*'`. Event paths use the same escaping, so
 `event.attributePath` can be passed straight back to `addListener`.
 `items.1` (map key `"1"`) and `items[1]` (list index 1) are different paths.
-A malformed path throws an `ArgumentError` when the listener is added.
+A malformed path throws an `ArgumentError` when the listener is added —
+typically a typo you'll catch the first time that line runs.
 
 ## Nested collections
 
@@ -150,7 +193,7 @@ observable collections and report their changes to the parent:
 
 ## Listener lifecycle
 
-`addListener` holds [listener] strongly and indefinitely — there is no
+`addListener` holds the listener strongly and indefinitely — there is no
 `dispose()`. This matches `ChangeNotifier.addListener`: whoever registers a
 listener is responsible for calling `removeListener` (or
 `removeAllListeners`) once it's no longer needed, typically from their own
@@ -185,6 +228,49 @@ listener in `initState` is never removed, the collection keeps that closure
 A collection whose lifetime matches its listeners' (the common case: a
 request/response model scoped to one screen) doesn't need this care, since
 everything is collected together once nothing external references it.
+
+If you use `getValueNotifier` with a `ValueListenableBuilder` instead of
+`addListener` directly, there's nothing to clean up: the builder manages
+its own subscription to the returned `ValueNotifier` and removes it when
+the builder is disposed.
+
+## FAQ
+
+**Do I need to call `dispose()` on a `FancyList` or `FancyMap`?**
+No — there is no `dispose()` method, and none is needed. See
+[Listener lifecycle](#listener-lifecycle) for the one case that does need
+cleanup: a listener registered with `addListener` directly, on a
+collection that outlives it.
+
+**Can I use this outside of Flutter, in a plain Dart package?**
+No. `getValueNotifier` returns a Flutter `ValueNotifier`, so this package
+depends on Flutter. If you only need the add/update/remove notifications
+and not the `ValueNotifier` integration, that's still the dependency that's
+pulled in.
+
+**Does this replace Provider / Riverpod / Bloc?**
+No — it solves a narrower problem: knowing *what* changed inside a list or
+map, and where. It composes fine with any of them; for example, expose a
+`FancyList` field on a `ChangeNotifier`-based model and call
+`notifyListeners()` from a `FancyCollectionValueChangeListener`, or use
+`getValueNotifier` directly in a widget without any state-management
+library at all.
+
+**Is there a performance cost?**
+Every mutation does one path-matching pass per registered listener path,
+which is proportional to the number of distinct paths you've subscribed
+to, not to the size of the collection. For typical UI-sized collections
+(dozens to low hundreds of items) this is not something you'll notice.
+Bulk operations (`clear`, `removeWhere`, `sort`, ...) emit a single event
+regardless of how many elements they touch, rather than one per element.
+
+**Why does `FancyMap<String, List<int>>()['a'] = [1]` not give me a
+`FancyList`?**
+Only values whose declared type can hold an observable collection are
+converted — see [Nested collections](#nested-collections). `List<int>`
+isn't a supertype of `FancyList<dynamic>`, so the plain list is kept as-is
+and its own mutations aren't observed. Declare the field as `dynamic`,
+`Object?` or `List<dynamic>` if you want it converted.
 
 ## Related packages
 
