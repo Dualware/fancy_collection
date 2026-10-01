@@ -17,6 +17,9 @@ nested maps and lists.
 - `getValueNotifier` exposes any path as a `ValueNotifier` for use with
   `ValueListenableBuilder`.
 
+Listeners are held strongly with no automatic cleanup — see
+[Listener lifecycle](#listener-lifecycle) below.
+
 ## Getting started
 
 ```sh
@@ -144,6 +147,44 @@ observable collections and report their changes to the parent:
 | `key`           | `null`                                             | entry key                           |
 | `value`         | stored element; the removed element on `remove`    | stored value; `null` on `remove`    |
 | `oldValue`      | previous element on `update`; removed element on `remove` | previous value on `update` and `remove` |
+
+## Listener lifecycle
+
+`addListener` holds [listener] strongly and indefinitely — there is no
+`dispose()`. This matches `ChangeNotifier.addListener`: whoever registers a
+listener is responsible for calling `removeListener` (or
+`removeAllListeners`) once it's no longer needed, typically from their own
+`dispose()`.
+
+This matters most when a listener closure captures something shorter-lived
+than the collection it's registered on, such as a widget's `State`:
+
+```dart
+class _MyWidgetState extends State<MyWidget> {
+  late final _listener = FancyCollectionValueChangeListener(
+    onCollectionEvent: (e) => setState(() {}), // captures `this`
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    widget.model.items.addListener('*', _listener);
+  }
+
+  @override
+  void dispose() {
+    widget.model.items.removeListener('*', _listener);
+    super.dispose();
+  }
+}
+```
+
+If `widget.model` outlives the widget (e.g. it's cached or app-wide) and the
+listener in `initState` is never removed, the collection keeps that closure
+— and the `State` it captures — alive for as long as the collection lives.
+A collection whose lifetime matches its listeners' (the common case: a
+request/response model scoped to one screen) doesn't need this care, since
+everything is collected together once nothing external references it.
 
 ## Related packages
 

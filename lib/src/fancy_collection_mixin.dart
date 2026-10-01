@@ -19,6 +19,15 @@ part of 'fancy_collection_core.dart';
 ///
 /// Events bubble up from nested collections, so listeners usually only need
 /// to be registered on the root.
+///
+/// Listeners are held strongly and indefinitely; there is no `dispose()`.
+/// This matches [ChangeNotifier.addListener]: whoever calls [addListener]
+/// is responsible for calling [removeListener] once they no longer need
+/// the callback, typically from their own `dispose()`. This matters most
+/// when a listener closure captures something shorter-lived than the
+/// collection it's registered on — a widget's `State`, for example — since
+/// the collection will keep that closure, and whatever it captures, alive
+/// for as long as the collection itself lives.
 mixin FancyCollectionMixin {
   FancyCollectionMixin? _parent;
   Object? _segment;
@@ -46,6 +55,9 @@ mixin FancyCollectionMixin {
   }
 
   /// Registers [listener] for changes matching [attributePath].
+  ///
+  /// [listener] is held strongly until [removeListener] or
+  /// [removeAllListeners] is called; see the class documentation.
   ///
   /// Throws an [ArgumentError] if [attributePath] is malformed.
   void addListener(
